@@ -5,33 +5,27 @@ Performance Benchmark on RAG embedding, indexing and search
 
 ### Intel SPR
 
+The RAG indexing and search time is measured based on `faiss` package. The `faiss` default binary can't bring good performance on Intel Xeon platforms. It requires us to manual build `faiss` cpu version from source.
+
 ```shell
+
 #install intel oneAPI
 wget https://registrationcenter-download.intel.com/akdlm/IRC_NAS/163da6e4-56eb-4948-aba3-debcec61c064/l_BaseKit_p_2024.0.1.46_offline.sh
 sudo sh ./l_BaseKit_p_2024.0.1.46_offline.sh
 
-#install conda/pip dependencies
-conda install astunparse ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses -y
-conda install jemalloc gperftools -c conda-forge -y
-conda install git-lfs -y
+#source mkl related env variables
+source /opt/intel/oneapi/mkl/latest/env/vars.sh
 
-pip install -U langchain
-pip install -U langchain-community
+#install dependency
+conda install -c conda-forge swig=4.1.1
 
-
-python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-python -m pip install intel-extension-for-pytorch oneccl_bind_pt --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/cpu/us/
-
-pip install sentence_transformers
-
-python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-python -m pip install intel-extension-for-pytorch
-python -m pip install oneccl_bind_pt --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/cpu/us/
-
-pip install intel-extension-for-transformers
-pip install accelerate
-pip install datasets
-
+#build faiss-cpu w/ avx512 support
+git clone https://github.com/facebookresearch/faiss.git
+mkdir build && cd build
+cmake -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=ON -DFAISS_ENABLE_RAFT=OFF -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DFAISS_OPT_LEVEL=avx512 -DBLA_VENDOR=Intel10_64_dyn ..
+make -j faiss && make -j swigfaiss
+cd faiss/python/ && pip install -e .
+make install
 ```
 
 ### Nvidia A100/H100
@@ -64,7 +58,7 @@ python benchmark.py --device gpu
 
 ### Env prepare
 
-Please ensure a `conda` env has been ready and follow below steps to create bechmarking env.
+The `embedding generation` time is measured based on langchain RAG API with Intel SPR 1s48c
 
 ```shell
 conda install astunparse ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses -y
