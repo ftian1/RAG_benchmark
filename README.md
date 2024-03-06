@@ -1,6 +1,3 @@
-Performance Benchmark on RAG embedding, indexing and search
-===========================
-
 ## RAG indexing and search performance benchmark on Intel SPR
 
 ### Env prepare
@@ -52,7 +49,7 @@ conda install -c pytorch -c nvidia -c rapidsai -c conda-forge faiss-gpu-raft=1.8
 python benchmark.py --device gpu
 ```
 
-## Embedding Generation performance benchmark on Intel SPR
+## RAG embedding generation performance benchmark on Intel SPR
 
 ### Env prepare
 
