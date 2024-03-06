@@ -1,9 +1,9 @@
 Performance Benchmark on RAG embedding, indexing and search
 ===========================
 
-## Env prepare
+## RAG indexing and search performance benchmark on Intel SPR
 
-### Intel SPR
+### Env prepare
 
 The RAG indexing and search time is measured based on `faiss` package. The `faiss` default binary can't bring good performance on Intel Xeon platforms. It requires us to manual build `faiss` cpu version from source.
 
@@ -28,17 +28,6 @@ cd faiss/python/ && pip install -e .
 make install
 ```
 
-### Nvidia A100/H100
-
-```shell
-
-conda install -c rapidsai -c conda-forge -c nvidia rmm cuda-version=12.1  #or 11.4
-conda install -c pytorch -c nvidia -c rapidsai -c conda-forge faiss-gpu-raft=1.8.0
-```
-
-## RAG indexing and search performance benchmark on Intel SPR
-
-
 ### Benchmark command
 
 ```shell
@@ -48,9 +37,18 @@ KMP_BLOCKTIME=1 KMP_SETTINGS=1 KMP_AFFINITY=granularity=fine,compact,1,0 OMP_NUM
 
 ## RAG indexing and search performance benchmark on Nvidia A100/H100
 
+### Env prepare
+
 ```shell
 
-# benchmark cmd
+conda install -c rapidsai -c conda-forge -c nvidia rmm cuda-version=12.1  #or 11.4
+conda install -c pytorch -c nvidia -c rapidsai -c conda-forge faiss-gpu-raft=1.8.0
+```
+
+### Benchmark command
+
+```shell
+
 python benchmark.py --device gpu
 ```
 
