@@ -20,7 +20,10 @@ conda install -c conda-forge swig=4.1.1
 git clone https://github.com/facebookresearch/faiss.git
 mkdir build && cd build
 cmake -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=ON -DFAISS_ENABLE_RAFT=OFF -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DFAISS_OPT_LEVEL=avx512 -DBLA_VENDOR=Intel10_64_dyn ..
+# build avx2 version
 make -j faiss && make -j swigfaiss
+# build avx512 version
+# make -n faiss_avx512 && make -j swigfaiss_avx512
 cd faiss/python/ && pip install -e .
 make install
 ```
