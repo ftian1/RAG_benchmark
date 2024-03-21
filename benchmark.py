@@ -91,6 +91,7 @@ if args.dummy:
     time11 = time.time()
     xb = rs.rand(1000000, 768).astype('float32')
     xb = np.tile(xb, (85, 1))
+    #xb = np.tile(xb, (85, 1))
     time22 = time.time()
     print("Generating dataset cost %.3f seconds" % (time22-time11))
     xq = rs.rand(10000, 768).astype('float32')
@@ -165,14 +166,15 @@ def bench_search_milliseconds(index, addVecs, queryVecs, nprobe, k, use_raft):
         index_gpu.search(queryVecs, k)
         return 1000*(time.time() - t0)
     else:
+        index.nprobe = nprobe
         t0 = time.time()
         index.search(queryVecs, k)
         return 1000*(time.time() - t0)
 
-trainset_sizes = [100000, 500000, 1000000, 8500000]
-pq_lens = [32, 64]
+trainset_sizes = [500000]
+pq_lens = [16, 32, 64]
 nprobes = [50, 100, 200]
-nlists =  [8192, 9220]
+nlists =  [4096, 8192]
 
 for train_row in trainset_sizes:
     for pqlen in pq_lens:
@@ -183,6 +185,7 @@ for train_row in trainset_sizes:
                     xt = xb[idx, :]
                     n_rows, n_cols = xb.shape
                     M = n_cols // pqlen
+
                     index = faiss.index_factory(n_cols, "IVF{},PQ{}x{}np".format(nlist, M, args.bits_per_code))
                     print("The current group params is trainVec size: %d, pq_len: %d, n_centroids: %d, numSubQuantizers: %d, bitsPerCode: %d, nprobe: %d" % (
                         train_row, pqlen, nlist, M, args.bits_per_code, probe))
@@ -209,6 +212,7 @@ for train_row in trainset_sizes:
                         print("Method: IVFPQ, Operation: ADD, dim: %d, n_centroids %d numSubQuantizers %d, bitsPerCode %d, numAdd %d, RAFT enabled GPU add time: %.3f milliseconds" % (
                             n_cols, nlist, M, args.bits_per_code, n_rows, raft_gpu_add_time))
                     else:
+
                         classical_gpu_add_time = bench_add_milliseconds(
                             index, xb, False)
                         print("Method: IVFFPQ, Operation: ADD, dim: %d, n_centroids %d, numSubQuantizers %d, bitsPerCode %d, numAdd %d, classical GPU add time: %.3f milliseconds, RAFT enabled GPU add time: %.3f milliseconds" % (
@@ -223,8 +227,9 @@ for train_row in trainset_sizes:
                         n_add, _ = xb.shape
                         print(xq.shape)
                         M = n_cols // pqlen
-                        index = faiss.index_factory(n_cols, "IVF{},PQ{}x{}np".format(nlist, M, args.bits_per_code))
-                        index.train(xt)
+                        if args.device == 'gpu':
+                            index = faiss.index_factory(n_cols, "IVF{},PQ{}x{}np".format(nlist, M, args.bits_per_code))
+                            index.train(xt)
                         for n_rows in queryset_sizes:
                             queryVecs = xq[np.random.choice(xq.shape[0], n_rows, replace=False)]
                             raft_gpu_search_time = bench_search_milliseconds(
